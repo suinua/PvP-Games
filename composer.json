@@ -1,0 +1,33 @@
+{
+  "name": "suinua/pvp",
+  "authors": [
+    {
+      "name": "suinua"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "": [
+        "src/"
+      ]
+    }
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "name": "cafett/game_chef",
+      "url": "https://github.com/cafett/game_chef"
+    },
+    {
+      "type": "git",
+      "name": "mine_deep_rock/form_builder",
+      "url": "https://github.com/MineDeepRock/form_builder"
+    }
+  ],
+  "require": {
+    "pocketmine/pocketmine-mp": "*",
+    "ext-json": "*",
+    "mine_deep_rock/form_builder": "dev-master",
+    "cafett/game_chef": "dev-master"
+  }
+}
