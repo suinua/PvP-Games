@@ -144,11 +144,7 @@ class TeamDeathMatchListener implements Listener
 
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
-        $playerData = GameChef::getPlayerData($player->getName());
-        if ($playerData->getBelongGameId() === null) return;
-
-        $game = GameChef::findGameById($playerData->getBelongGameId());
-        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
+        if (!GameChef::isRelatedWith($player,GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
         //スポーン地点を再設定
         GameChef::setTeamGamePlayerSpawnPoint($event->getPlayer());
