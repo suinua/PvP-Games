@@ -4,15 +4,43 @@
 namespace pvp\tdm;
 
 
+use Exception;
+use game_chef\api\GameChef;
+use game_chef\api\TeamGameBuilder;
+use game_chef\models\Score;
 use game_chef\models\TeamGame;
 use game_chef\pmmp\bossbar\Bossbar;
 use pocketmine\level\Position;
 use pocketmine\Player;
 use pocketmine\Server;
 use pvp\BossbarTypeList;
+use pvp\GameTypeList;
 
 class TeamDeathMatchController
 {
+    public function buildTeamDeathMatch() {
+        try {
+            $builder = new TeamGameBuilder();
+            $builder->setNumberOfTeams(2);//チーム数
+            $builder->setGameType(GameTypeList::TeamDeathMatch());//試合のタイプ
+            $builder->setTimeLimit(400);//時間制限
+            $builder->setVictoryScore(new Score(30));//勝利判定スコア
+            $builder->setCanJumpIn(true);//途中参加
+            $builder->selectMapByName("");//マップ名
+
+
+            //$builder->setUpTeam("", 10, 0);//使用するチームをマップから選択。１つも選択しなければすべて選ばれる
+            $builder->setFriendlyFire(false);//フレンドリーファイアー
+            $builder->setMaxPlayersDifference(2);//チームの最大人数差
+            $builder->setCanMoveTeam(true);//チーム移動
+
+            $game = $builder->build();
+            GameChef::registerGame($game);
+        } catch (Exception $exception) {
+            //todo:log
+        }
+    }
+
     static function go(Player $player, TeamGame $game): void {
         $map = $game->getMap();
         $levelName = $map->getLevelName();

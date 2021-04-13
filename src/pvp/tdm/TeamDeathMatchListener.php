@@ -19,6 +19,7 @@ use game_chef\pmmp\events\PlayerQuitGameEvent;
 use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 use pvp\BossbarTypeList;
@@ -26,39 +27,13 @@ use pvp\GameTypeList;
 
 class TeamDeathMatchListener implements Listener
 {
-
-    public function buildTeamDeathMatch() {
-        try {
-            $builder = new TeamGameBuilder();
-            $builder->setNumberOfTeams(2);//チーム数
-            $builder->setGameType(GameTypeList::TeamDeathMatch());//試合のタイプ
-            $builder->setTimeLimit(400);//時間制限
-            $builder->setVictoryScore(new Score(30));//勝利判定スコア
-            $builder->setCanJumpIn(true);//途中参加
-            $builder->selectMapByName("");//マップ名
-
-            //マップ中から使用するチームだけをsetUpする
-            $builder->setUpTeam("", 10, 0);//使用するチームをマップから選択。１つも選択しなければすべて選ばれる
-            $builder->setFriendlyFire(false);//フレンドリーファイアー
-            $builder->setMaxPlayersDifference(2);//チームの最大人数差
-            $builder->setCanMoveTeam(true);//チーム移動
-
-            $game = $builder->build();
-            GameChef::registerGame($game);
-        } catch (Exception $exception) {
-            //todo:log
-        }
-    }
-
-
     public function onStartedGame(StartedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
-        /** @var TeamGame $game */
-        $game = GameChef::findGameById($gameId);
-        GameChef::setTeamPlayersSpawnPoint($gameId);
+        $game = GameChef::findTeamGameById($gameId);
+        GameChef::setTeamGamePlayersSpawnPoint($gameId);
 
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
@@ -165,5 +140,17 @@ class TeamDeathMatchListener implements Listener
             $player = Server::getInstance()->getPlayer($playerData->getName());
             TeamDeathMatchScoreboard::update($player, $game);
         }
+    }
+
+    public function onPlayerDeath(PlayerDeathEvent $event) {
+        $player = $event->getPlayer();
+        $playerData = GameChef::getPlayerData($player->getName());
+        if ($playerData->getBelongGameId() === null) return;
+
+        $game = GameChef::findGameById($playerData->getBelongGameId());
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
+
+        //スポーン地点を再設定
+        GameChef::setTeamGamePlayerSpawnPoint($event->getPlayer());
     }
 }

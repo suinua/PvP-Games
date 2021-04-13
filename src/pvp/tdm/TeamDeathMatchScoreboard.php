@@ -4,8 +4,6 @@
 namespace pvp\tdm;
 
 
-use game_chef\models\Game;
-use game_chef\models\Team;
 use game_chef\models\TeamGame;
 use game_chef\pmmp\scoreboard\Score;
 use game_chef\pmmp\scoreboard\Scoreboard;
@@ -22,7 +20,6 @@ class TeamDeathMatchScoreboard extends Scoreboard
             new Score($slot, "Map:" . $game->getMap()->getName(), 1),
         ];
 
-        /** @var Team $team */
         foreach ($game->getTeams() as $team) {
             $scores[] = new Score(
                 $slot,
