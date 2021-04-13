@@ -84,14 +84,17 @@ class TeamDeathMatchListener implements Listener
     public function onPlayerKilledPlayer(PlayerKilledPlayerEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
+        $attacker = $event->getAttacker();
+        $killedPlayer = $event->getKilledPlayer();
+
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
+        if ($event->isFriendlyFire()) return;//同士討ちなら(試合の設定上ありえないが、サンプルなので)
+
         $game = GameChef::findTeamGameById($gameId);
 
-        $attacker = $event->getAttacker();
         $attackerData = GameChef::getPlayerData($attacker->getName());
         $attackerTeam = $game->findTeamById($attackerData->getBelongTeamId());
 
-        $killedPlayer = $event->getKilledPlayer();
         $killedPlayerData = GameChef::getPlayerData($killedPlayer->getName());
         $killedPlayerTeam = $game->findTeamById($killedPlayerData->getBelongTeamId());
 

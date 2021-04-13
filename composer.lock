@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a3a5f320d9159cda0ac0003b3961df3",
+    "content-hash": "953042e1247b17233e37aa3c581f2c3a",
     "packages": [
         {
             "name": "adhocore/json-comment",
@@ -67,7 +67,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/cafett/game_chef",
-                "reference": "03ccb3954228b497e421b3ff78728a70c0d8d526"
+                "reference": "63522c21e76f97cc896da396da3721a3c6dca3d9"
             },
             "require": {
                 "ext-json": "*",
@@ -91,7 +91,7 @@
                     "name": "suinua"
                 }
             ],
-            "time": "2021-04-12T14:08:50+00:00"
+            "time": "2021-04-13T15:28:49+00:00"
         },
         {
             "name": "mine_deep_rock/form_builder",
