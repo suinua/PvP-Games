@@ -1,10 +1,12 @@
 <?php
 
 
-namespace pvp;
+namespace pvp\bow_game;
 
 
-class BowGameListener
+use pocketmine\event\Listener;
+
+class BowGameListener implements Listener
 {
 
 }
