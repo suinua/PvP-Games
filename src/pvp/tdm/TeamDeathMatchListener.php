@@ -1,14 +1,16 @@
 <?php
 
 
-namespace pvp;
+namespace pvp\tdm;
 
 
 use Exception;
 use game_chef\api\GameChef;
 use game_chef\api\TeamGameBuilder;
+use game_chef\models\GameStatus;
 use game_chef\models\Score;
 use game_chef\models\TeamGame;
+use game_chef\pmmp\bossbar\Bossbar;
 use game_chef\pmmp\events\AddedScoreEvent;
 use game_chef\pmmp\events\FinishedGameEvent;
 use game_chef\pmmp\events\PlayerJoinedGameEvent;
@@ -17,8 +19,10 @@ use game_chef\pmmp\events\PlayerQuitGameEvent;
 use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
 use pocketmine\event\Listener;
-use pocketmine\level\Position;
 use pocketmine\Server;
+use pocketmine\utils\TextFormat;
+use pvp\BossbarTypeList;
+use pvp\GameTypeList;
 
 class TeamDeathMatchListener implements Listener
 {
@@ -57,16 +61,8 @@ class TeamDeathMatchListener implements Listener
         GameChef::setTeamPlayersSpawnPoint($gameId);
 
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
-            $map = $game->getMap();
-            $levelName = $map->getLevelName();
-            $level = Server::getInstance()->getLevelByName($levelName);
-
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            //$player->teleport($level->getSpawnLocation());
-            $player->teleport(Position::fromObject($player->getSpawn(), $level));
-            $player->getInventory()->setContents([
-                //todo:インベントリセット
-            ]);
+            TeamDeathMatchController::go($player, $game);
         }
     }
 
@@ -76,23 +72,27 @@ class TeamDeathMatchListener implements Listener
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
-            $level = Server::getInstance()->getLevelByName("lobby");
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            $player->teleport($level->getSpawnLocation());
-            $player->getInventory()->setContents([
-                //todo:インベントリセット
-            ]);
+            TeamDeathMatchController::back($player);
         }
+        //TODO:演出
     }
 
     public function onPlayerJoinedGame(PlayerJoinedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
+        $player = $event->getPlayer();
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
+        $game = GameChef::findTeamGameById($gameId);
+        //試合が始まっていたら、ワールドに送る
+        if ($game->getStatus()->equals(GameStatus::Started())) {
+            TeamDeathMatchController::go($player, $game);
+        }
+
+        //todo:参加メッセージを送信
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            //todo:メッセージ
         }
     }
 
@@ -102,20 +102,38 @@ class TeamDeathMatchListener implements Listener
         $player = $event->getPlayer();
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
-        $level = Server::getInstance()->getLevelByName("lobby");
-        $player->teleport($level->getSpawnLocation());
-        $player->getInventory()->setContents([
-            //todo:インベントリセット
-        ]);
-
+        TeamDeathMatchController::back($player);
+        //todo:メッセージを送信
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $gamePlayer = Server::getInstance()->getPlayer($playerData->getName());
-            //todo:メッセージ
         }
     }
 
     public function onPlayerKilledPlayer(PlayerKilledPlayerEvent $event) {
-        //todo:実装
+        $gameId = $event->getGameId();
+        $gameType = $event->getGameType();
+        if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
+        $game = GameChef::findTeamGameById($gameId);
+
+        $attacker = $event->getAttacker();
+        $attackerData = GameChef::getPlayerData($attacker->getName());
+        $attackerTeam = $game->findTeamById($attackerData->getBelongTeamId());
+
+        $killedPlayer = $event->getKilledPlayer();
+        $killedPlayerData = GameChef::getPlayerData($killedPlayer->getName());
+        $killedPlayerTeam = $game->findTeamById($killedPlayerData->getBelongTeamId());
+
+        //メッセージを送信
+        $message = $attackerTeam->getTeamColorFormat() . "[{$attacker->getName()}]" . TextFormat::RESET .
+            " killed" .
+            $killedPlayerTeam->getTeamColorFormat() . " [{$killedPlayer->getName()}]";
+        foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
+            $gamePlayer = Server::getInstance()->getPlayer($playerData->getName());
+            $gamePlayer->sendMessage($message);
+        }
+
+        //スコアの追加
+        GameChef::addTeamGameScore($gameId, $attackerTeam->getId(), new Score(1));
     }
 
     public function onUpdatedGameTimer(UpdatedGameTimerEvent $event) {
@@ -123,7 +141,18 @@ class TeamDeathMatchListener implements Listener
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
-        //todo:bossbar更新
+        //ボスバーの更新
+        foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
+            $player = Server::getInstance()->getPlayer($playerData->getName());
+            $bossbar = Bossbar::findByType($player, BossbarTypeList::TeamDeathMatch());
+            if ($bossbar === null) continue;
+            if ($event->getTimeLimit() === null) {
+                $bossbar->updateTitle("経過時間:({$event->getElapsedTime()})");
+            } else {
+                $bossbar->updateTitle("{$event->getElapsedTime()}/{$event->getTimeLimit()}");
+                $bossbar->updatePercentage(1 - ($event->getElapsedTime() / $event->getTimeLimit()));
+            }
+        }
     }
 
     public function onAddedScore(AddedScoreEvent $event) {
@@ -131,6 +160,10 @@ class TeamDeathMatchListener implements Listener
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
-        //todo:scoreboard更新
+        $game = GameChef::findTeamGameById($gameId);
+        foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
+            $player = Server::getInstance()->getPlayer($playerData->getName());
+            TeamDeathMatchScoreboard::update($player, $game);
+        }
     }
 }
