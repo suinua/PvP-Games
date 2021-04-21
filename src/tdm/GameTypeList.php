@@ -1,7 +1,7 @@
 <?php
 
 
-namespace pvp;
+namespace tdm;
 
 
 use game_chef\models\GameType;

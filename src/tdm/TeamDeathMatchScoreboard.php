@@ -1,7 +1,7 @@
 <?php
 
 
-namespace pvp\tdm;
+namespace tdm;
 
 
 use game_chef\models\TeamGame;
@@ -15,19 +15,18 @@ use pocketmine\utils\TextFormat;
 class TeamDeathMatchScoreboard extends Scoreboard
 {
     private static function create(TeamGame $game): Scoreboard {
-        $slot = ScoreboardSlot::sideBar();
         $scores = [
-            new Score($slot, "Map:" . $game->getMap()->getName(), 1),
+            new Score("Map:" . $game->getMap()->getName()),
         ];
 
         foreach ($game->getTeams() as $team) {
             $scores[] = new Score(
-                $slot,
                 $team->getTeamColorFormat() . $team->getName()
-                . TextFormat::RESET . ":" .
-                $team->getScore()->getValue()
+                . TextFormat::RESET . ":" .$team->getScore()->getValue()
             );
         }
+
+        $slot = ScoreboardSlot::sideBar();
         return parent::__create($slot, "====TeamDeathMatch====", $scores, ScoreSortType::smallToLarge());
     }
 

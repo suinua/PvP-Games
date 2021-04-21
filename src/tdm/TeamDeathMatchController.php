@@ -1,8 +1,7 @@
 <?php
 
 
-namespace pvp\tdm;
-
+namespace tdm;
 
 use Exception;
 use game_chef\api\GameChef;
@@ -13,32 +12,39 @@ use game_chef\pmmp\bossbar\Bossbar;
 use pocketmine\level\Position;
 use pocketmine\Player;
 use pocketmine\Server;
-use pvp\BossbarTypeList;
-use pvp\GameTypeList;
 
 class TeamDeathMatchController
 {
-    public function buildTeamDeathMatch() {
-        try {
-            $builder = new TeamGameBuilder();
-            $builder->setNumberOfTeams(2);//チーム数
-            $builder->setGameType(GameTypeList::TeamDeathMatch());//試合のタイプ
-            $builder->setTimeLimit(400);//時間制限
-            $builder->setVictoryScore(new Score(30));//勝利判定スコア
-            $builder->setCanJumpIn(true);//途中参加
-            $builder->selectMapByName("");//マップ名
+    /**
+     * @throws Exception
+     */
+    static function buildTeamDeathMatch() {
+        $tdmGames = GameChef::getGamesByType(GameTypeList::TeamDeathMatch());
+        if (count($tdmGames) !== 0) throw new Exception("TDMはすでに作成されています");
+
+        $builder = new TeamGameBuilder();
+        $builder->setNumberOfTeams(2);//チーム数
+        $builder->setGameType(GameTypeList::TeamDeathMatch());//試合のタイプ
+        $builder->setTimeLimit(400);//時間制限
+        $builder->setVictoryScore(new Score(30));//勝利判定スコア
+        $builder->setCanJumpIn(true);//途中参加
+        $builder->selectMapByName("forTDM");//マップ名
 
 
-            //$builder->setUpTeam("", 10, 0);//使用するチームをマップから選択。１つも選択しなければすべて選ばれる
-            $builder->setFriendlyFire(false);//フレンドリーファイアー
-            $builder->setMaxPlayersDifference(2);//チームの最大人数差
-            $builder->setCanMoveTeam(true);//チーム移動
+        //$builder->setUpTeam("", 10, 0);//使用するチームをマップから選択。１つも選択しなければすべて選ばれる
+        $builder->setFriendlyFire(false);//フレンドリーファイアー
+        $builder->setMaxPlayersDifference(2);//チームの最大人数差
+        $builder->setCanMoveTeam(true);//チーム移動
 
-            $game = $builder->build();
-            GameChef::registerGame($game);
-        } catch (Exception $exception) {
-            //todo:log
-        }
+        $game = $builder->build();
+        GameChef::registerGame($game);
+
+        GameChef::startGame($game->getId());
+    }
+
+    static function join(Player $player, TeamGame $game): void {
+        if (!$game->getType()->equals(GameTypeList::TeamDeathMatch())) return;
+
     }
 
     static function go(Player $player, TeamGame $game): void {

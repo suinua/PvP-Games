@@ -1,7 +1,7 @@
 <?php
 
 
-namespace pvp\tdm;
+namespace tdm;
 
 
 use game_chef\api\GameChef;
@@ -15,15 +15,53 @@ use game_chef\pmmp\events\PlayerKilledPlayerEvent;
 use game_chef\pmmp\events\PlayerQuitGameEvent;
 use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
+use pocketmine\command\Command;
+use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\Player;
+use pocketmine\plugin\PluginBase;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
-use pvp\BossbarTypeList;
-use pvp\GameTypeList;
 
-class TeamDeathMatchListener implements Listener
+class TeamDeathMatch extends PluginBase implements Listener
 {
+    public function onEnable() {
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
+
+    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
+        if ($label === "tdm") {
+            if (count($args) === 0) return false;
+            $method = $args[0];
+            if ($method === "build") {
+                try {
+                    TeamDeathMatchController::buildTeamDeathMatch();
+                } catch (\Exception $e) {
+                    $this->getLogger()->error($e->getMessage());
+                }
+                return true;
+            }
+
+            if ($method === "join") {
+                if ($sender instanceof Player) {
+                    $sender->sendForm(new TDMListForm($sender));
+                    return true;
+                }
+            }
+
+            if ($method === "quit") {
+                if ($sender instanceof Player) {
+                    $result = GameChef::quitGame($sender);
+                    $sender->sendMessage($result ? "抜けました" : "抜けれませんでした");
+                }
+            }
+
+            return false;
+        }
+        return false;
+    }
+
     public function onStartedGame(StartedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
@@ -54,6 +92,7 @@ class TeamDeathMatchListener implements Listener
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         $player = $event->getPlayer();
+        var_dump($player->getName());
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
         $game = GameChef::findTeamGameById($gameId);
@@ -144,7 +183,7 @@ class TeamDeathMatchListener implements Listener
 
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
-        if (!GameChef::isRelatedWith($player,GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
+        if (!GameChef::isRelatedWith($player, GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
         //スポーン地点を再設定
         GameChef::setTeamGamePlayerSpawnPoint($event->getPlayer());

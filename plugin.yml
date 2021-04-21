@@ -1,5 +1,10 @@
-name: pvp,
-main: pvp\Main,
-version: 1.0.0,
+name: tdm
+main: tdm\TeamDeathMatch
+version: 1.0.0
 api: [3.0.0]
-    
+
+commands:
+  tdm:
+    usage: "/tdm"
+    description: "tdm"
+    permission: op
