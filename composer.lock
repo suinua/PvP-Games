@@ -67,7 +67,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/cafett/game_chef",
-                "reference": "a4b17ff89f51abb3ce67dbe5aa078d3fea5714ba"
+                "reference": "8dab7dd0082ddf5c1f3c42836c3118363455f143"
             },
             "require": {
                 "ext-json": "*",
@@ -91,7 +91,7 @@
                     "name": "suinua"
                 }
             ],
-            "time": "2021-04-21T12:39:50+00:00"
+            "time": "2021-04-28T14:38:18+00:00"
         },
         {
             "name": "mine_deep_rock/form_builder",
@@ -424,16 +424,16 @@
         },
         {
             "name": "pocketmine/pocketmine-mp",
-            "version": "3.19.0",
+            "version": "3.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/pmmp/PocketMine-MP.git",
-                "reference": "b307cd0aa15b76cfe41d2a649d14b3aa6fb78f64"
+                "reference": "a7cd0810020af15fb3d79127c77cf576085cd4cc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/pmmp/PocketMine-MP/zipball/b307cd0aa15b76cfe41d2a649d14b3aa6fb78f64",
-                "reference": "b307cd0aa15b76cfe41d2a649d14b3aa6fb78f64",
+                "url": "https://api.github.com/repos/pmmp/PocketMine-MP/zipball/a7cd0810020af15fb3d79127c77cf576085cd4cc",
+                "reference": "a7cd0810020af15fb3d79127c77cf576085cd4cc",
                 "shasum": ""
             },
             "require": {
@@ -470,7 +470,7 @@
                 "pocketmine/spl": "^0.4.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "0.12.83",
+                "phpstan/phpstan": "0.12.84",
                 "phpstan/phpstan-phpunit": "^0.12.6",
                 "phpstan/phpstan-strict-rules": "^0.12.2",
                 "phpunit/phpunit": "^9.2"
@@ -496,7 +496,7 @@
             "homepage": "https://pmmp.io",
             "support": {
                 "issues": "https://github.com/pmmp/PocketMine-MP/issues",
-                "source": "https://github.com/pmmp/PocketMine-MP/tree/3.19.0"
+                "source": "https://github.com/pmmp/PocketMine-MP/tree/3.19.1"
             },
             "funding": [
                 {
@@ -508,7 +508,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2021-04-07T18:03:36+00:00"
+            "time": "2021-04-25T19:34:13+00:00"
         },
         {
             "name": "pocketmine/raklib",

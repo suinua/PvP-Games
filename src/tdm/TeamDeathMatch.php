@@ -8,9 +8,9 @@ use game_chef\api\GameChef;
 use game_chef\models\GameStatus;
 use game_chef\models\Score;
 use game_chef\pmmp\bossbar\Bossbar;
-use game_chef\pmmp\events\AddedScoreEvent;
+use game_chef\pmmp\events\AddScoreEvent;
 use game_chef\pmmp\events\FinishedGameEvent;
-use game_chef\pmmp\events\PlayerJoinedGameEvent;
+use game_chef\pmmp\events\PlayerJoinGameEvent;
 use game_chef\pmmp\events\PlayerKilledPlayerEvent;
 use game_chef\pmmp\events\PlayerQuitGameEvent;
 use game_chef\pmmp\events\StartedGameEvent;
@@ -52,8 +52,8 @@ class TeamDeathMatch extends PluginBase implements Listener
 
             if ($method === "quit") {
                 if ($sender instanceof Player) {
-                    $result = GameChef::quitGame($sender);
-                    $sender->sendMessage($result ? "抜けました" : "抜けれませんでした");
+                    GameChef::quitGame($sender);
+                    $sender->sendMessage("抜けました");
                 }
             }
 
@@ -88,11 +88,10 @@ class TeamDeathMatch extends PluginBase implements Listener
         //TODO:演出
     }
 
-    public function onPlayerJoinedGame(PlayerJoinedGameEvent $event) {
+    public function onPlayerJoinedGame(PlayerJoinGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         $player = $event->getPlayer();
-        var_dump($player->getName());
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
         $game = GameChef::findTeamGameById($gameId);
@@ -101,9 +100,9 @@ class TeamDeathMatch extends PluginBase implements Listener
             TeamDeathMatchController::go($player, $game);
         }
 
-        //todo:参加メッセージを送信
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
-            $player = Server::getInstance()->getPlayer($playerData->getName());
+            $gamePlayer = Server::getInstance()->getPlayer($playerData->getName());
+            $gamePlayer->sendMessage($player->getName() . "が試合に参加しました");
         }
     }
 
@@ -114,9 +113,10 @@ class TeamDeathMatch extends PluginBase implements Listener
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない
 
         TeamDeathMatchController::back($player);
-        //todo:メッセージを送信
+
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $gamePlayer = Server::getInstance()->getPlayer($playerData->getName());
+            $gamePlayer->sendMessage($player->getName() . "が試合から去りました");
         }
     }
 
@@ -131,10 +131,10 @@ class TeamDeathMatch extends PluginBase implements Listener
 
         $game = GameChef::findTeamGameById($gameId);
 
-        $attackerData = GameChef::getPlayerData($attacker->getName());
+        $attackerData = GameChef::findPlayerData($attacker->getName());
         $attackerTeam = $game->findTeamById($attackerData->getBelongTeamId());
 
-        $killedPlayerData = GameChef::getPlayerData($killedPlayer->getName());
+        $killedPlayerData = GameChef::findPlayerData($killedPlayer->getName());
         $killedPlayerTeam = $game->findTeamById($killedPlayerData->getBelongTeamId());
 
         //メッセージを送信
@@ -169,7 +169,7 @@ class TeamDeathMatch extends PluginBase implements Listener
         }
     }
 
-    public function onAddedScore(AddedScoreEvent $event) {
+    public function onAddedScore(AddScoreEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::TeamDeathMatch())) return;//TDMでなければ関与しない

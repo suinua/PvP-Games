@@ -9,6 +9,8 @@ use game_chef\api\TeamGameBuilder;
 use game_chef\models\Score;
 use game_chef\models\TeamGame;
 use game_chef\pmmp\bossbar\Bossbar;
+use pocketmine\item\Item;
+use pocketmine\item\ItemIds;
 use pocketmine\level\Position;
 use pocketmine\Player;
 use pocketmine\Server;
@@ -19,9 +21,6 @@ class TeamDeathMatchController
      * @throws Exception
      */
     static function buildTeamDeathMatch() {
-        $tdmGames = GameChef::getGamesByType(GameTypeList::TeamDeathMatch());
-        if (count($tdmGames) !== 0) throw new Exception("TDMはすでに作成されています");
-
         $builder = new TeamGameBuilder();
         $builder->setNumberOfTeams(2);//チーム数
         $builder->setGameType(GameTypeList::TeamDeathMatch());//試合のタイプ
@@ -54,6 +53,11 @@ class TeamDeathMatchController
 
         //$player->teleport($level->getSpawnLocation());
         $player->teleport(Position::fromObject($player->getSpawn(), $level));
+
+        //インベントリ
+        $player->getInventory()->setContents([
+            Item::get(ItemIds::WOODEN_SWORD)
+        ]);
 
         //ボスバー
         $bossbar = new Bossbar($player, BossbarTypeList::TeamDeathMatch(), "", 1.0);
